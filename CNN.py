@@ -13,19 +13,17 @@ from torch.utils.data import Dataset, DataLoader
 import torchvision.transforms as T
 
 
-# ---------------- CONFIG ---------------- #
-
 BASE_DIR = Path("kitchen_mockdata")
 IMG_DIR = BASE_DIR / "images"
 CSV_PATH = BASE_DIR / "mock_kitchen_data.csv"
 MODEL_PATH = BASE_DIR / "cnn_model.pth"
 
-IMG_SIZE = (128, 128)          # width, height
-N_SAMPLES = 10000               # total samples, balanced across classes
+IMG_SIZE = (128, 128)         
+N_SAMPLES = 10000               
 CLASSES = ["fresh", "warning", "spoiled"]
 
 
-# ---------------- DIR UTILS ---------------- #
+
 
 def setup_dirs():
     """Create base and class-specific image directories."""
@@ -34,8 +32,6 @@ def setup_dirs():
     for cls in CLASSES:
         (IMG_DIR / cls).mkdir(parents=True, exist_ok=True)
 
-
-# ---------------- IMAGE GENERATION ---------------- #
 
 def generate_food_image(label: str, idx: int) -> Path:
     """
@@ -53,19 +49,19 @@ def generate_food_image(label: str, idx: int) -> Path:
 
     # Base color depending on label
     if label == "fresh":
-        base_color = (50, 160, 50)      # greenish
+        base_color = (50, 160, 50)      
         n_spots = random.randint(0, 2)
     elif label == "warning":
-        base_color = (200, 180, 60)     # yellowish
+        base_color = (200, 180, 60)    
         n_spots = random.randint(3, 6)
-    else:  # spoiled
-        base_color = (130, 80, 40)      # brownish
+    else: 
+        base_color = (130, 80, 40)      
         n_spots = random.randint(7, 15)
 
-    # Fill background
+   
     draw.rectangle([0, 0, w, h], fill=base_color)
 
-    # Add darker "mold" spots
+   
     for _ in range(n_spots):
         x = random.randint(0, w - 10)
         y = random.randint(0, h - 10)
@@ -77,14 +73,13 @@ def generate_food_image(label: str, idx: int) -> Path:
         )
         draw.ellipse([x, y, x + r, y + r], fill=spot_color)
 
-    # Optional noise
     noise_level = 10
     np_img = np.array(img).astype(np.int16)
     noise = np.random.randint(-noise_level, noise_level + 1, np_img.shape)
     np_img = np.clip(np_img + noise, 0, 255).astype(np.uint8)
     img = Image.fromarray(np_img)
 
-    # Save
+
     filename = f"{label}_{idx:04d}.png"
     img_path = IMG_DIR / label / filename
     img.save(img_path)
@@ -92,7 +87,7 @@ def generate_food_image(label: str, idx: int) -> Path:
     return img_path
 
 
-# ---------------- TABULAR MOCK DATA ---------------- #
+# ---TABULAR MOCK DATA ----- #
 
 STORAGE_LOCATIONS = ["fridge_1", "fridge_2", "freezer_1", "shelf_1"]
 
@@ -103,7 +98,7 @@ def generate_tabular_row(item_id: int, label: str, img_path: Path) -> dict:
     item_type = random.choice(["chicken", "beef", "milk", "lettuce", "tomato"])
     storage_location = random.choice(STORAGE_LOCATIONS)
 
-    # Base distributions depending on label
+  
     if label == "fresh":
         hours_since_delivery = random.uniform(1, 48)
         expiry_hours_remaining = random.uniform(24, 120)
@@ -112,12 +107,12 @@ def generate_tabular_row(item_id: int, label: str, img_path: Path) -> dict:
         hours_since_delivery = random.uniform(24, 120)
         expiry_hours_remaining = random.uniform(0, 24)
         visual_mold_score = random.randint(2, 3)
-    else:  # spoiled
+    else:  
         hours_since_delivery = random.uniform(48, 200)
         expiry_hours_remaining = random.uniform(-48, 0)
         visual_mold_score = random.randint(4, 5)
 
-    # Temperature & humidity depending on storage + label
+    
     if "fridge" in storage_location:
         if label == "fresh":
             temperature_c = random.uniform(1, 5)
@@ -132,9 +127,9 @@ def generate_tabular_row(item_id: int, label: str, img_path: Path) -> dict:
         elif label == "warning":
             temperature_c = random.uniform(-15, -5)
         else:
-            temperature_c = random.uniform(-10, 5)  # half-thawed
+            temperature_c = random.uniform(-10, 5)  
         humidity_percent = random.uniform(20, 60)
-    else:  # shelf
+    else:  
         if label == "fresh":
             temperature_c = random.uniform(15, 22)
         elif label == "warning":
@@ -143,7 +138,7 @@ def generate_tabular_row(item_id: int, label: str, img_path: Path) -> dict:
             temperature_c = random.uniform(25, 35)
         humidity_percent = random.uniform(30, 80)
 
-    # CO2 – higher for spoiled
+    
     if label == "fresh":
         co2_ppm = random.uniform(400, 800)
     elif label == "warning":
@@ -187,9 +182,6 @@ def create_mock_dataset(n_samples: int = N_SAMPLES) -> pd.DataFrame:
     print(f"Saved {len(df)} samples to {CSV_PATH}")
     return df
 
-
-# ---------------- PYTORCH DATASET ---------------- #
-
 class KitchenImageDataset(Dataset):
     def __init__(self, df: pd.DataFrame, transform=None):
         self.df = df.reset_index(drop=True)
@@ -212,8 +204,6 @@ class KitchenImageDataset(Dataset):
 
         return img, label
 
-
-# ---------------- CNN MODEL ---------------- #
 
 class SimpleCNN(nn.Module):
     def __init__(self, num_classes: int = len(CLASSES)):
@@ -253,8 +243,6 @@ class SimpleCNN(nn.Module):
         return x
 
 
-# ---------------- TRAINING LOOP ---------------- #
-
 def train_model(model, train_loader, val_loader, device, epochs=5):
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=1e-3)
@@ -262,7 +250,7 @@ def train_model(model, train_loader, val_loader, device, epochs=5):
     model.to(device)
 
     for epoch in range(1, epochs + 1):
-        # ---- TRAIN ----
+   
         model.train()
         running_loss = 0.0
         correct = 0
@@ -286,7 +274,6 @@ def train_model(model, train_loader, val_loader, device, epochs=5):
         train_loss = running_loss / total
         train_acc = correct / total
 
-        # ---- VALIDATION ----
         model.eval()
         val_loss = 0.0
         val_correct = 0
@@ -332,8 +319,6 @@ def predict_single_image(model, image_path: Path, transform, device):
         print(f"  {cls}: {p:.3f}")
 
 
-# ---------------- MAIN ---------------- #
-
 def main():
     # 1. Create mock images + tabular data
     df = create_mock_dataset(N_SAMPLES)
@@ -346,7 +331,7 @@ def main():
     train_df = df.iloc[:n_train].reset_index(drop=True)
     val_df = df.iloc[n_train:].reset_index(drop=True)
 
-    # 3. Define transforms
+    # 3 Now we Define transforms
     transform = T.Compose([
         T.Resize(IMG_SIZE),
         T.ToTensor(),
@@ -354,7 +339,7 @@ def main():
         T.Normalize(mean=[0.5, 0.5, 0.5], std=[0.25, 0.25, 0.25]),
     ])
 
-    # 4. Create datasets & loaders
+    # 4. and we create datasets & loaders
     train_dataset = KitchenImageDataset(train_df, transform=transform)
     val_dataset = KitchenImageDataset(val_df, transform=transform)
 

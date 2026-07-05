@@ -45,9 +45,9 @@ Food Freshness Classification
 Fresh | Warning | Spoiled
 
 Future Improvements':
--Use real food image datasets
--Integrate real IoT sensors
--Develop a Digital Twin dashboard
--Deploy as a web application
+Use real food image datasets
+Integrate real IoT sensors
+Develop a Digital Twin dashboard
+Deploy as a web application
 
 Author: Shashank Upadhayay

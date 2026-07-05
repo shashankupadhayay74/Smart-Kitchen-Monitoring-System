@@ -1,4 +1,4 @@
-Smart Kitchen Monitoring System using CNN
+Smart Kitchen Monitoring System using CNN:
 
 Overview:
 This project implements a Convolutional Neural Network (CNN) to classify food into three freshness categories: Fresh, Warning (Near Expiry), and Spoiled. The project uses a synthetically generated dataset along with simulated IoT sensor data to demonstrate how AI can support food quality monitoring and reduce food waste in restaurant kitchens.
